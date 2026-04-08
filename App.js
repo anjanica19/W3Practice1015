@@ -15,8 +15,8 @@ export default class App extends Component {
     };
 
     this.studentData = {
-      nama: 'Budi Susanto',
-      nim: '030812345',
+      nama: 'Alyza Septia Anjani',
+      nim: '0920240015',
       prodi: 'TRPL - Politeknik Astra',
     };
   }
@@ -26,7 +26,7 @@ export default class App extends Component {
     console.log('[MOUNTING] Aplikasi Presensi Dibuka.');
 
     this.intervalJam = setInterval(() => {
-      const waktu = new Date().toLocaleDateString('id-ID', {
+      const waktu = new Date().toLocaleTimeString('id-ID', {
         hour: '2-digit', minute: '2-digit', second: '2-digit'
       });
       this.setState({ jamRealtime: waktu });

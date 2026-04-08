@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     },
     studentName: {
         fontSize:18,
-        fontweight: 'bold',
+        fontWeight: 'bold',
         color: '#333',
     },
     studentNIM: {
