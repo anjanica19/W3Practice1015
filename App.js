@@ -1,112 +1,101 @@
-import React, { Component } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, } from 'react-native';
-import { SafeAreaView, SafeAreaProvider, } from 'react-native-safe-area-context';
-import KartuProfil from './components/KartuProfil';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, TextInput, Image, View, TouchableOpacity } from 'react-native';
+import {SafeAreaProvider, SafeAreaView} from "react-native-safe-area-context";
+import KartuProfil from './components/KartuProfil'
 
-export default class App extends Component {
+
+export default function App() {
   // a.inisialisasi state
-  constructor(props) {
-    super(props);
-    this.state = {
-      kodeKelas: '',
-      isHadir: false,
-      waktuAbsen: '',
-      jamRealtime: 'Memuat jam...',
-    };
+  const [kodeKelas, setKodeKelas] = useState('');
+  const [isHadir, setIsHadir] = useState(false);
+  const [waktuAbsen, setWaktuAbsen] = useState('');
+  const [jamRealtime, setJamRealTime] = useState('Memuat jam...');
 
-    this.studentData = {
-      nama: 'Alyza Septia Anjani',
-      nim: '0920240015',
-      prodi: 'TRPL - Politeknik Astra',
-    };
-  }
+  const studentData = {
+    nama: 'Alyza Septia Anjani',
+    nim: '0920240015',
+    prodi: 'TRPL - Politeknik Astra',
+  };
 
-  // b.fase mounting (komponen lahir)
-  componentDidMount() {
-    console.log('[MOUNTING] Aplikasi Presensi Dibuka.');
+  // b.menggabungkan mounting & unmounting
+  useEffect(() => {
+    console.log('[MOUNTING] Aplikasi dibuka (via useEffect). Jam menyala');
 
-    this.intervalJam = setInterval(() => {
+    const intervalJam = setInterval(() => {
       const waktu = new Date().toLocaleTimeString('id-ID', {
         hour: '2-digit', minute: '2-digit', second: '2-digit'
       });
-      this.setState({ jamRealtime: waktu });
+      setJamRealTime(waktu);
     }, 1000);
-  }
 
-  // c.fase updating (komponen berubah)
-  componentDidUpdate(prevProps, prevState) {
-    if(this.state.isHadir === true && prevState.isHadir === false) {
-      console.log(`[UPDATING] Sukses presensi pada pukul: ${this.state.waktuAbsen}`);
+    // cleanup function
+    return() => {
+      console.log('[UNMOUNTING] Aplikasi ditutup. Membersihkan interval jam!');
+    };
+  }, []);
+
+  // c.menggantikan componentdidUpdate
+  useEffect(() => {
+    if (isHadir === true) {
+      console.log(`[UPDATING] Sukses presensi pada pukul: ${waktuAbsen}`);
     }
-  }
+  }, [isHadir, waktuAbsen]);
 
-  // d.fase unmounting (komponen mati)
-  componentWillUnmount() {
-    console.log('[UNMOUNTING] Aplikasi Ditutup. Membersihkan memori...');
-    clearInterval(this.intervalJam);
-  }
-
-  // e. logika event handler
-  handleAbsen = () => {
-    if (this.state.kodeKelas.trim() === '') {
-      alert('Masukkan kode kelas (Simulasi QR) terlebih dahulu!');
+   // d.event handler
+   const handleAbsen = () => {
+    if (kodeKelas.trim() === '') {
+      alert('Masukkan kode kelas terlebih dahulu!');
       return;
     }
+    setIsHadir(true);
+    setWaktuAbsen(jamRealtime);
+   };
 
-    this.setState({
-    isHadir: true,
-    waktuAbsen: this.state.jamRealtime
-    });
-  };
+   // e.return UI
+   return(
+    <SafeAreaProvider>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Sistem Presensi</Text>
+          <Text style={styles.clockText}>{jamRealtime}</Text>
+        </View>
 
-  // f.fungsi render wajib
-  render() {
-    return (
-      <SafeAreaProvider>
-        <SafeAreaView style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Sistem Presensi</Text>
-            <Text style={styles.clockText}>{this.state.jamRealtime}</Text>
-          </View>
+        <KartuProfil student={studentData} />
 
-          <KartuProfil student={this.studentData} />
-
-          <View style={styles.actionSection}>
-            {this.state.isHadir ? (
-              <View style={styles.successCard}>
-                <Image
-                source={{ uri: 'https://cdn-icons-png.flaticon.com/512/190/190411.png' }}
+        <View style={styles.actionSection}>
+          {isHadir ? (
+            <View style={styles.successCard}>
+              <Image
+                source={{ uri: 'http://cdn-icons-png.flaticon.com/512/190/190411.png'}}
                 style={styles.successIcon}
-                />
+              />
               <Text style={styles.successText}>Presensi Berhasil!</Text>
-              <Text style={styles.timeText}>Tercatat pada: {this.state.waktuAbsen} WIB</Text>
-              <Text style={styles.codeText}>Kode Terverifikasi: {this.state.kodeKelas}</Text>
-              </View>
+              <Text style={styles.timeText}>Tercatat pada: {waktuAbsen} WIB</Text>
+              <Text style={styles.codeText}>Kode Terverifikasi: {kodeKelas}</Text>
+            </View>
+          ) : (
+            <View style={styles.inputCard}>
+              <Text style={styles.instructionText}>Masukkan Kode Kelas:</Text>
+              <Text style={styles.noteText}>(Simulasi dari hasil Scan QR Kamera)</Text>
 
-            ) : (
-              <View style={styles.inputCard}> 
-                <Text style={styles.instructionText}>Masukkan Kode Kelas:</Text>
-                <Text style={styles.noteText}>Simulasi dari hasil Scan QR Kamera</Text>
+              <TextInput
+              style={styles.input}
+              placeholder="Contoh: TRPL-03"
+              value={kodeKelas}
+              onChangeText={setKodeKelas}
+              autoCapitalize="characters"
+              />
 
-                <TextInput
-                  style={styles.input}
-                  placeholder='Contoh: TRPL-03'
-                  value={this.state.kodeKelas}
-                  onChangeText={(text) => this.setState({ kodeKelas: text })}
-                  autoCapitalize='characters'
-                />
-
-                <TouchableOpacity style={styles.buttonSubmit} onPress={this.handleAbsen}>
-                  <Text style={styles.buttonText}>Konfirmasi Kehadiran</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          </View>
-        </SafeAreaView>
-      </SafeAreaProvider>
-    );
+              <TouchableOpacity style={styles.buttonSubmit} onPress={handleAbsen}>
+                <Text style={styles.buttonText}>Konfirmasi Kehadiran</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </SafeAreaView>
+    </SafeAreaProvider>
+   );
   }
-}
 
 const styles = StyleSheet.create({
   container: {
